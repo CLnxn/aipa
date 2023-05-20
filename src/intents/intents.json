@@ -1,0 +1,11 @@
+{
+    "reminder":{
+        "method":["set","get","update","delete"]
+    },
+    "email":{
+        "method":["send","draft","archive","get"]
+    },
+    "others":{
+        
+    }
+}

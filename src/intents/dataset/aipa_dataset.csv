@@ -1,0 +1,81 @@
+statement,intent,type
+ Please set a reminder for tomorrow's meeting at 10:00 AM.,reminder,set
+ Could you remind me to pick up groceries on my way home from work?,reminder,set
+ Set a reminder for the dentist appointment next Monday at 2:30 PM.,reminder,set
+ I need a reminder to pay the bills by the end of the week.,reminder,set
+ Remind me to call John at 4:00 PM today.,reminder,set
+ Can you set a reminder to water the plants every morning?,reminder,set
+ I would appreciate a reminder to take my medication at 9:00 PM every day.,reminder,set
+ Please remind me to submit the project report before Friday.,reminder,set
+ Set a reminder to attend the parent-teacher meeting on Wednesday at 6:00 PM.,reminder,set
+ Could you remind me to send the important email at 3:00 PM?,reminder,set
+ I need a reminder to cancel the subscription before it renews next week.,reminder,set
+ Remind me to book a table for dinner on Friday evening.,reminder,set
+ Set a reminder to start preparing for the exam a week in advance.,reminder,set
+ Please remind me to return the library books by Friday.,reminder,set
+ Can you set a reminder to check the progress of the construction project on Monday?,reminder,set
+ I would appreciate a reminder to buy a birthday gift for Sarah before next Saturday.,reminder,set
+ Remind me to call the insurance company to renew my policy.,reminder,set
+ Set a reminder to go for a jog at 7:00 AM every morning.,reminder,set
+ Could you remind me to pack my suitcase for the trip on Thursday evening?,reminder,set
+ I need a reminder to review and finalize the presentation before the meeting.,reminder,set
+ Can you show me a list of my upcoming reminders?,reminder,get
+ Please provide me with the reminders I have set for today.,reminder,get
+ Could you check what reminders I have for this week?,reminder,get
+ I would like to see a summary of my reminders for the month.,reminder,get
+ Can you display all the reminders I have set for tomorrow?,reminder,get
+ Please show me the reminders I have for the weekend.,reminder,get
+ Could you check if I have any overdue reminders?,reminder,get
+ I would appreciate it if you could list down all my active reminders.,reminder,get
+ Can you show me a calendar view of my reminders?,reminder,get
+ Please provide me with a daily reminder report.,reminder,get
+ Could you check what reminders I have set for specific dates?,reminder,get
+ I would like to see a chronological list of all my reminders.,reminder,get
+" Can you display the reminders I have categorized as ""Important""?",reminder,get
+ Please show me the reminders I have set for my work-related tasks.,reminder,get
+ Could you check what reminders I have scheduled for the morning?,reminder,get
+ I would appreciate it if you could list down my recurring reminders.,reminder,get
+ Can you show me the reminders I have set for my personal appointments?,reminder,get
+ Please provide me with the reminders I have set for my travel plans.,reminder,get
+ Could you check if I have any reminders related to my health and fitness goals?,reminder,get
+ I would like to see a summary of all my completed reminders.,reminder,get
+ Please send an email to John regarding the project update.,email,send
+ Could you draft an email to the team about the upcoming meeting?,email,send
+ I need you to send an email to HR requesting time off.,email,send
+ Can you email the client to schedule a follow-up meeting?,email,send
+ Please send an email to Sarah thanking her for her help.,email,send
+ Could you draft an email to the supplier regarding the order delay?,email,send
+ I request that you send an email to the marketing team with the campaign details.,email,send
+ Can you email the IT department about the software issue I'm experiencing?,email,send
+ Please send an email to all employees about the policy change.,email,send
+ Could you draft an email to the finance department for expense reimbursement?,email,send
+ I need you to email the sales team the updated pricing list.,email,send
+ Can you send an email to the customer regarding their complaint?,email,send
+ Please email the project manager for an extension on the deadline.,email,send
+ Could you draft an email to the event organizer to confirm our participation?,email,send
+ I request that you send an email to the committee members with the meeting agenda.,email,send
+ Can you email the logistics team to arrange shipment for the new order?,email,send
+ Please send an email to the vendor to inquire about product availability.,email,send
+ Could you draft an email to the CEO summarizing the quarterly performance?,email,send
+ I need you to email the legal department for contract review.,email,send
+ Can you send an email to the team leader requesting a progress update?,email,send
+ Send the email to John now!,email,send
+ Could you please send an email to John?,email,send
+ Kindly draft and send an email to John.,email,send
+" Hey, can you shoot John an email?",email,send
+" Hey, would you mind sending an email to John?",email,send
+" Don't waste any time, just send the email!",email,send
+ It would be really helpful if you could send an email.,email,send
+ I would appreciate it if you could send an email.,email,send
+ Mind sending an email? Thanks!,email,send
+" If you have a moment, could you please send an email? Thanks!",email,send
+ Send the email ASAP!,email,send
+" Whenever you get a chance, can you please send an email?",email,send
+ Please send an email at your earliest convenience.,email,send
+" Hey, shoot an email when you can.",email,send
+" Whenever you're ready, could you send an email?",email,send
+ I command you to send the email immediately!,email,send
+ I kindly request you to send the email as soon as possible.,email,send
+ I kindly request your prompt attention in sending the email.,email,send
+ Can you please drop an email?,email,send
+ Can you please send an email when you have a chance?,email,send
