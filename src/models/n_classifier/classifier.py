@@ -50,11 +50,11 @@ class lin_model():
         self.total_layers+=1
         # if first layer is being added, init weights shape based on input size
         if not self.layers:
-            new_layer.initWeights(self.input_size)
+            new_layer.initWeights(self.input_size+1)
             self.layers.append(new_layer)
             return
         prev_layer: layer = self.layers[-1]
-        new_layer.initWeights(prev_layer.total_nodes) #prev is assumed to be dense
+        new_layer.initWeights(prev_layer.total_nodes+1) #prev is assumed to be dense + bias
         self.layers.append(new_layer)
     
     # get index by layer
@@ -68,7 +68,7 @@ class lin_model():
         Returns:
             (layer): the indexed layer class instance
         """
-        return self.layers[layer_index] 
+        return self.layers[layer_index]
     # gets model output from a numerically embedded input
     def feed_forward(self, input: list[float], lyr=0, activation_fn=sigmoid):
         """gets a model output vector (calculated y) by feeding in a numerically embedded input (input) provided in the args through the
@@ -84,7 +84,7 @@ class lin_model():
             an output vector from the network
         """
         # return input after going through last layer
-        print(input)
+        # print(input)
         if lyr > self.total_layers:
 
             return input
@@ -101,7 +101,7 @@ class lin_model():
             for i, entry in enumerate(input):
                 activation = activation_fn(entry)
                 outputs.append(activation)
-            self.activations.append(outputs) # store activation of input layer in index 0
+            self.activations.append(input) # store activation of input layer in index 0
             self.outputs.append(outputs) # store output of input layer in index 0
             return self.feed_forward(outputs, lyr+1) 
         
@@ -122,18 +122,14 @@ class lin_model():
             input.append(fill)        
     def clear_outputs(self):
         self.outputs.clear()
-        self.outputs = deque()
     def clear_activations(self):
         self.activations.clear()
-        self.activations = deque()
 
     def clear_cache(self):
         self.clear_activations()
         self.clear_outputs()
 
-    # returns a gradients array for every weight in every node in every layer (3d array)
-    # call this after running feed_forward
-    def get_gradients(self, actual_y_vect:list[float]):
+    def get_gradients(self, actual_y_vect:list[float], clean=True):
         """Called after running feed_forward to obtain the gradients of every node in the layer for further optimisation of weights.
         This method can ONLY be called after running feed_forward, as it uses internal <activations> & <outputs> variables 
         for computing the various gradient changes per node.
@@ -141,9 +137,13 @@ class lin_model():
         Args: 
             actual_y_vect: list of actual output values to be used with the network-computed output values to 
             obtain the error and gradients for updating the weights.
+            clean: determines whether to clean the inhomogeneous gradients array
+            into a homogeneous np array tuple (1st hidden_layer, hidden_layers,output_layer) .
         Returns: 
-            a gradients array for every weight in every node in every layer (3d array)
-        
+            A gradients array for every weight in every node in every layer (3d array).
+
+            Each ndarray element's 3D shape follows (number of layers, number of nodes per layer, number of weights per node per layer)\n
+            Each ndarray element's 2D shape follows (number of nodes in layer, number of weights per node in layer)
         
         """
         gradients = deque()
@@ -151,6 +151,7 @@ class lin_model():
         assert len(self.outputs)-1 == len(self.activations)-1
         assert len(self.outputs) == len(self.layers)+1
         count = len(self.outputs)-1
+        print('outputs from getgrad',self.outputs)
         for i in range(len(self.layers)-1,-1,-1):
             #if output layer
             if count == len(self.outputs)-1:
@@ -171,12 +172,56 @@ class lin_model():
             count -= 1
             deltas.appendleft(dels)
             gradients.appendleft(grads)
+        # weights per node depends on input layer node size, thus different from the other hidden layers. Removed (popleft) for numpy array homogenity
+        hidden_layer_1 = np.asarray(gradients.popleft()) 
+        # layer size differs from the other
+        output_grad = np.asarray(gradients.pop())
+        grads = np.asarray(gradients)
+        return hidden_layer_1, grads, output_grad
+    
+    def get_gradients_v2(self, actual_y_vect:list[float], outputs: deque, activations: deque):
+        """Called after running feed_forward to obtain the gradients of every node in the layer for further optimisation of weights.
+        This method can ONLY be called after running feed_forward, as it uses internal <activations> & <outputs> variables 
+        for computing the various gradient changes per node.
+        
+        Args: 
+            actual_y_vect: list of actual output values to be used with the network-computed output values to 
+            obtain the error and gradients for updating the weights.
+        Returns: 
+            a gradients array for every weight in every node in every layer (3d array)
+        
+        
+        """
+        gradients = deque()
+        deltas = deque() # higher index = closer to output layer, len(deltas)-1 = output layer delta
+        assert len(outputs)-1 == len(activations)-1
+        assert len(outputs) == len(self.layers)+1
+        count = len(outputs)-1
+        for i in range(len(self.layers)-1,-1,-1):
+            #if output layer
+            if count == len(outputs)-1:
+                dels, grads = output_sqred_err_grad_vec(sigmoid_derivative, outputs[count],
+                                        actual_y_vect, activations[count], outputs[count-1])
+                print('dels, grads:',dels,grads)
+                gradients.appendleft(grads)
+                deltas.appendleft(dels)
+                count-= 1
+                continue
+            next_layer: layer = self.get_layer(i+1)
+            transposed_weights = np.transpose(next_layer.weights)            
+            dels, grads = sqred_err_grad_vec(sigmoid_derivative, 
+                                             activations[count],
+                                             transposed_weights,
+                                             deltas[0],
+                                             outputs[count-1])
+            count -= 1
+            deltas.appendleft(dels)
+            gradients.appendleft(grads)
         return gradients
 
 class layer():
     def __init__(self, activation_fn, activation_fn_d, layer_size):
         self.weights = []
-        self.bias = 1
         self.activation_fn = activation_fn
         self.activation_fn_d = activation_fn_d 
         self.total_nodes = layer_size
@@ -186,7 +231,7 @@ class layer():
         """Initialises weights such that there are <size> weights per node in the layer
         
         Args: 
-            size: the number of weights in each node of the layer. (Usually equal to the number of nodes in the previous layer.)
+            size: the number of weights in each node of the layer (excludes bias). (Usually equal to the number of nodes in the previous layer.)
             value: the default value for each weight. 
         """
 
@@ -205,36 +250,41 @@ class layer():
         Returns: a deque collection of outputs from the current layer.
         """
         outputs = deque()
+        
+        
+
         # reject if uninitialised
         if len(self.weights) <= 0:
-            print('b')
+            print('Error in computeOutputs: weights are not initialised')
             return -1
-        n = self.weights.shape[1] - len(input)
-        print(self.weights.shape,len(input))
+        n = self.weights.shape[1] - len(input) - 1
+        # print(self.weights.shape,len(input))
         # reject if not enough weights to calculate activation 
         if n < 0:
-            print('a')
+            print(f'Error in computeOutputs: not enough weights to calculate activation. n: {n}')
             return -1
         # pad default fill value (0) to the end of input if input size < weights size 
         if n > 0:
             pad_input(input, n)
+        # append additional input el for bias
+        input.append(1)
         # compute activation for each node 
         # plug into activation fn to get output
         # appends them into an outputs vector
         for node_i in range(self.total_nodes):
-            a = np.dot(self.weights[node_i], input)+ self.bias
+            a = np.dot(self.weights[node_i], input)
 
             # stores activation into class
             self.activations.append(a)
 
             outputs.append(self.activation_fn(a))
-
+        # remove the op term for bias from queue reference
+        input.pop()
         return outputs
      
     def clear_activations_store(self):
         """Clears activations field  when called."""
         self.activations.clear()
-        self.activations = deque()
 
 def pad_input(input: list , amount: int, fill = 0):
         """Pads a <fill> value <amount> times behind the input
