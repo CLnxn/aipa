@@ -5,7 +5,7 @@ import math
 # if actual is only reminder intent: [1.,0,0]
 # if intent is both reminder and email: [1.,1.,0]
 # if not reminder and email: [0,0,1.]
-def mini_batch_gradient_descent(model: lin_model, input: np.ndarray, batch_size=5, learning_rate=0.01):
+def mini_batch_gradient_descent(model: lin_model, input: np.ndarray, batch_size=5):
     total_size = len(input)
     remainder = total_size % batch_size
     if remainder != 0:

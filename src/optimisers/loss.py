@@ -1,5 +1,5 @@
 import numpy as np
-from activation_fn import sigmoid_derivative
+from optimisers.activation_fn import sigmoid_derivative
 from collections import deque
 
 def output_sqred_err_grad_vec(act_fn_d, 
@@ -7,7 +7,6 @@ def output_sqred_err_grad_vec(act_fn_d,
                                   act_y_vect: list[float],
                                   activ_lyr_vect:list[float], 
                                   prev_lyr_op_vect: list[float]):
-    act_d_op = np.asarray([act_fn_d(activation) for activation in activ_lyr_vect])
     """used to compute the avg gradients & avg deltas of the weights of an n-node output layer 
     in the output layer only.
 
@@ -27,18 +26,23 @@ def output_sqred_err_grad_vec(act_fn_d,
         2-element tuple of (deltas for each node in the output layer,
         2d array: an array of nodes containing array of errors wrt weights in that node)
     """
+    print('start of output_sqred_arr_vec')
+    print(calc_y_vect,act_y_vect,activ_lyr_vect, prev_lyr_op_vect)
+    act_d_op = np.asarray([act_fn_d(activation) for activation in activ_lyr_vect])
     gradients = np.zeros((len(activ_lyr_vect), len(prev_lyr_op_vect)))
-    diff_y = np.subtract(calc_y_vect,act_y_vect)
+    d_y = np.subtract(calc_y_vect,act_y_vect)
     deltas = deque()
     # for each node in op layer (no. of nodes shd also equal len of calc_y_vec)
     for i in range(len(activ_lyr_vect)):
-        mean_err = np.mean(diff_y)
+        mean_err = np.mean(d_y)
         # compute mean deltaNode for each node in the layer
         deltaNode = mean_err*act_d_op[i]
         deltas.append(deltaNode)
         gradients[i]= np.multiply(deltaNode,prev_lyr_op_vect)
         
         # move on to the next node
+    print('end of output_sqred_arr_vec')
+    
     return deltas, gradients
 
 def sqred_err_grad_vec(act_fn_d, 
@@ -54,8 +58,8 @@ def sqred_err_grad_vec(act_fn_d,
     Args:
         act_fn_d: derivative function (fn) of the current layer's activation fn
         curr_lyr_activ_vect: vector of activations of nodes in the current layer
-        next_lyr_w_matrix: 2d array of weights; an array of array of weights in a node of 
-                            the next layer coming from a particular node in the curr layer 
+        next_lyr_w_matrix: 2d array of weights; an array of array of weights from every node of 
+                            the next layer connected to a particular node in the curr layer 
                             (transpose of a regular matrix of the next layer nodes's weights)
         next_lyr_deltas: array of deltas for each node in the next layer
         prev_lyr_op_vect: vector containing output of nodes from prev layer 
@@ -64,14 +68,15 @@ def sqred_err_grad_vec(act_fn_d,
         2-element tuple of (deltas for each node in the current layer,
         2d array: an array of nodes containing array of errors wrt weights in that node)
     """
-
+    print('before test',next_lyr_w_matrix.shape, next_lyr_deltas)
+    
     # start of tests
     # 1. next layer same shape
-    if next_lyr_w_matrix.shape[1] != len(next_lyr_deltas):
-        raise Exception('Failed test 1: matrix x-axis shape not equal next layer size.')
+    if int(next_lyr_w_matrix.shape[1]) != len(next_lyr_deltas):
+        raise Exception('Failed test 1: matrix x-axis (length of array element) shape not equal next layer size.')
     # 2. curr layer same shape
-    if next_lyr_w_matrix.shape[0] != len(curr_lyr_activ_vect):
-        raise Exception('Failed test 2: matrix y-axis shape not equal to curr layer size.')
+    if int(next_lyr_w_matrix.shape[0]) != len(curr_lyr_activ_vect):
+        raise Exception('Failed test 2: matrix y-axis (outer array length) shape not equal to curr layer size.')
     # end of tests
 
     gradients = np.zeros((len(curr_lyr_activ_vect), len(prev_lyr_op_vect)))

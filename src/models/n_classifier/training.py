@@ -5,7 +5,10 @@ from nltk.stem import WordNetLemmatizer
 from classifier import lin_model
 import random
 import sys
+import numpy as np
+print(sys.path)
 sys.path.insert(0, 'C:\\Users\\proki\\repos\\aipa\\src')
+sys.path.insert(0, 'D:\\proki\\repos\\general\\aipa\\src')
 from optimisers.activation_fn import sigmoid, sigmoid_derivative
 
 
@@ -15,10 +18,11 @@ def train_model(model: lin_model):
     inputs = load_training_data()
     model.add_layer(sigmoid, sigmoid_derivative)
     model.add_layer(sigmoid, sigmoid_derivative)
-    model.add_layer(sigmoid, sigmoid_derivative, 2)
-    output = model.feed_forward(input=[10,20,10])
+    model.add_layer(sigmoid, sigmoid_derivative, 3) #output shape: [y1 (reminders intent),y2 (email intent), y3 (other intent)], y1 & y2 b/w 0-1 inclusive
+    output = model.feed_forward(input=[10,20,10,20,30])
+    grads = model.get_gradients([1,0,0])
     print('output:',output)
-
+    print('gradients:',grads)
     
 
 
@@ -43,7 +47,8 @@ def get_intents():
     intents_fv.close()
     return json.loads(intents_input)
 
-train_model(lin_model())
+train_model(lin_model(input_size=5,layer_size=10))
+
 
 
 
