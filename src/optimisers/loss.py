@@ -88,7 +88,9 @@ def sqred_err_grad_vec(act_fn_d,
     gradients = np.zeros((len(curr_lyr_activ_vect), len(prev_lyr_op_vect)))
     deltas = deque()
     # start populating gradients and deltas using backprog to from next (right) to current layer
+    # print('start 0')
     for i, activation in enumerate(curr_lyr_activ_vect):
+        # print('start 1')
         activ_d = act_fn_d(activation)
         # sum of next layer weights associated with curr layer node with next layer deltas 
         next_lyr_sum = np.dot(next_lyr_w_matrix[i], next_lyr_deltas)
@@ -98,14 +100,17 @@ def sqred_err_grad_vec(act_fn_d,
         
         deltaNode = next_lyr_sum*activ_d
         deltas.append(deltaNode)
-        gradients[i] = np.multiply(deltaNode, prev_lyr_op_vect)  
+        # print(next_lyr_w_matrix[i], next_lyr_deltas)
+        gradients[i] = np.multiply(deltaNode, prev_lyr_op_vect) 
+        # print('end 1')
+    # print('end 0')
     return deltas, gradients
 
-val = output_sqred_err_grad_vec(sigmoid_derivative, 
-                               [0.8807971, 0.9644288, 0.982014], 
-                               [1,1,0.5], [2.0,3.3,4], [0.7,0.8,0.2])
+# val = output_sqred_err_grad_vec(sigmoid_derivative, 
+#                                [0.8807971, 0.9644288, 0.982014], 
+#                                [1,1,0.5], [2.0,3.3,4], [0.7,0.8,0.2])
 
-test2 = sqred_err_grad_vec(sigmoid_derivative, [5.0,4.0,1.4,2.2],np.full((4,3),5.0),
-                           [0.8807971, 0.9644288, 0.982014],[0.8,0.3,0.4,0.8])
-print(test2)
+# test2 = sqred_err_grad_vec(sigmoid_derivative, [5.0,4.0,1.4,2.2],np.full((4,3),5.0),
+#                            [0.8807971, 0.9644288, 0.982014],[0.8,0.3,0.4,0.8])
+# print(test2)
 # print(val)

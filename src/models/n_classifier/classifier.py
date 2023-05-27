@@ -70,7 +70,7 @@ class lin_model():
         """
         return self.layers[layer_index]
     # gets model output from a numerically embedded input
-    def feed_forward(self, input: list[float], lyr=0, activation_fn=sigmoid):
+    def feed_forward(self, input: list[float], lyr=0, activation_fn=sigmoid, cleanAfter=False):
         """gets a model output vector (calculated y) by feeding in a numerically embedded input (input) provided in the args through the
           network's layers. This method populates the self.outputs & self.activations property when called. 
           These need to be manually cleared by calling clear_cache() after processing and gradient descent for 1 data input is completed
@@ -79,20 +79,22 @@ class lin_model():
             input: the input vector to be forward-processed in the network
             lyr: the internal index to track the current layer of the function's iteration
             activation_fn: the activation function to be used in the input layer
-        
+            cleanAfter (bool): determines whether the model will clear the activations & outputs stored after a feedforward iteration
         Returns:
             an output vector from the network
         """
         # return input after going through last layer
         # print(input)
         if lyr > self.total_layers:
-
+            if cleanAfter:
+                self.clear_cache()
             return input
         # input layer processing
         if lyr == 0:
             n = self.input_size - len(input)
             if n < 0:
-                return -1
+                # if the input is larger than the available nodes, consider only the first self.input_size entries
+                input = input[:n]
             if n > 0:
                 pad_input(input, n)
             # print(len(input),self.input_size)
@@ -103,7 +105,7 @@ class lin_model():
                 outputs.append(activation)
             self.activations.append(input) # store activation of input layer in index 0
             self.outputs.append(outputs) # store output of input layer in index 0
-            return self.feed_forward(outputs, lyr+1) 
+            return self.feed_forward(outputs, lyr+1, cleanAfter=cleanAfter) 
         
         # hidden layer index is lyr-1, lyr >= 1
         curr_layer: layer = self.get_layer(lyr-1)
@@ -115,7 +117,7 @@ class lin_model():
         self.activations.append(deque(curr_layer.activations))
         # clear cached activations in layer
         curr_layer.clear_activations_store()
-        return self.feed_forward(outputs,lyr+1)
+        return self.feed_forward(outputs,lyr+1, cleanAfter=cleanAfter)
     
     def pad_input(input: list, amount: int, fill = 0):
         for i in range(amount):
@@ -149,15 +151,16 @@ class lin_model():
         gradients = deque()
         deltas = deque() # higher index = closer to output layer, len(deltas)-1 = output layer delta
         assert len(self.outputs)-1 == len(self.activations)-1
+        print(f'{len(self.outputs)} {len(self.layers)+1}')
         assert len(self.outputs) == len(self.layers)+1
         count = len(self.outputs)-1
-        print('outputs from getgrad',self.outputs)
+        #print('output after feedforward', self.outputs)
         for i in range(len(self.layers)-1,-1,-1):
             #if output layer
             if count == len(self.outputs)-1:
                 dels, grads = output_sqred_err_grad_vec(sigmoid_derivative, self.outputs[count],
                                           actual_y_vect, self.activations[count],self.outputs[count-1])
-                print('dels, grads:',dels,grads)
+                #print('dels, grads:',dels,grads)
                 gradients.appendleft(grads)
                 deltas.appendleft(dels)
                 count-= 1
@@ -177,6 +180,12 @@ class lin_model():
         # layer size differs from the other
         output_grad = np.asarray(gradients.pop())
         grads = np.asarray(gradients)
+        print('Gradient calculations completed \n\n')
+        print('1st layer gradients:',hidden_layer_1, '\n\n')
+        print('hidden layer gradients:', grads, '\n\n')
+        print('output layer gradients:', output_grad, '\n\n')
+        print('gradient shapes:',f'{hidden_layer_1.shape}, {grads.shape}, {output_grad.shape}')
+        
         return hidden_layer_1, grads, output_grad
     
     def get_gradients_v2(self, actual_y_vect:list[float], outputs: deque, activations: deque):
@@ -219,6 +228,16 @@ class lin_model():
             gradients.appendleft(grads)
         return gradients
 
+    def get_weights(self):
+        """
+        Returns:
+            3D array of arrays (layers) that each (node) contain arrays of weights of a node.
+        """
+        weights = deque()
+        for i, lyr in enumerate(self.layers):
+            lyr: layer
+            weights.append(lyr.weights)
+        return weights
 class layer():
     def __init__(self, activation_fn, activation_fn_d, layer_size):
         self.weights = []
@@ -227,7 +246,7 @@ class layer():
         self.total_nodes = layer_size
         self.activations = deque()
 
-    def initWeights(self, size:int, value=1.0):
+    def initWeights(self, size:int, value=0.001):
         """Initialises weights such that there are <size> weights per node in the layer
         
         Args: 
