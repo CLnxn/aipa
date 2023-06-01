@@ -6,10 +6,12 @@ from collections import deque
 # if actual is only reminder intent: [1.,0,0]
 # if intent is both reminder and email: [1.,1.,0]
 # if not reminder and email: [0,0,1.]
+#TODO: implement hook to monitor loss against epoch via matplotlib
+#TODO: ability to run same batch multiple times
 def mini_batch_gradient_descent(model: lin_model, training_inputs: np.ndarray, test_samples, test_function, batch_size=5):
     total_size = len(training_inputs)
-    remainder = total_size % batch_size
-    if remainder != 0:
+    
+    if  total_size % batch_size != 0:
         print('WARNING: some batch_sizes are not fully filled')
         
     # 1 batch per epoch; for every epoch
@@ -22,10 +24,11 @@ def mini_batch_gradient_descent(model: lin_model, training_inputs: np.ndarray, t
         model.clear_cache()
         for entry in training_inputs[start+1:min(start+batch_size,total_size)]:
             model.feed_forward(entry[0])
-            h_1_l_g, grad, op_l_g = model.get_gradients(entry[1])    
+            h_1_l_g, grad, op_l_g = model.get_gradients(entry[1]) # 1st hidden layer grads, interim gradients & output layer gradients   
             h_1st_lyr_grads += h_1_l_g
             grads += grad
             output_lyr_grads += op_l_g        
+            # clean activation & outputs 3dmatrix cache
             model.clear_cache()
         avg_grads = [np.divide(h_1st_lyr_grads,batch_size), np.divide(grads,batch_size), np.divide(output_lyr_grads,batch_size)]
         #start updating weights layer by layer        

@@ -1,0 +1,6 @@
+things to vectorise:
+act_f_d in :
+	1. field in layer
+	2. feedforward, computeOutputs
+	3. get_gradients
+	4. loss.py

@@ -7,7 +7,7 @@ sys.path.insert(0, 'C:\\Users\\proki\\repos\\aipa\\src')
 sys.path.insert(0, 'D:\\proki\\repos\\general\\aipa\\src')
 from optimisers.activation_fn import sigmoid, sigmoid_derivative
 from optimisers.loss import output_sqred_err_grad_vec, sqred_err_grad_vec
-
+from models.initialization.weights_init import xavier_init
 class lin_model():
     def __init__(self, learning_rate=0.01,
                  input_size=200, layer_size = 75
@@ -34,7 +34,7 @@ class lin_model():
         self.outputs = deque() # same length as activations
         self.activations = deque() # same length as outputs
     # adds a layer (can be hidden | output layer)
-    def add_layer(self, activation_fn, activation_fn_d,layer_size: int =None):
+    def add_layer(self, activation_fn,layer_size: int =None):
         """Inserts a dense layer (hidden or output layer determined by order of insertion by calling this method) 
         into the network from the end.
 
@@ -46,7 +46,7 @@ class lin_model():
         if layer_size == None:
             layer_size = self.layer_size
 
-        new_layer = layer(activation_fn, activation_fn_d, layer_size)
+        new_layer = layer(activation_fn, layer_size)
         self.total_layers+=1
         # if first layer is being added, init weights shape based on input size
         if not self.layers:
@@ -54,7 +54,7 @@ class lin_model():
             self.layers.append(new_layer)
             return
         prev_layer: layer = self.layers[-1]
-        new_layer.initWeights(prev_layer.total_nodes+1) #prev is assumed to be dense + bias
+        new_layer.initWeights(prev_layer.total_nodes+1) # prev is assumed to be dense + bias
         self.layers.append(new_layer)
     
     # get index by layer
@@ -99,10 +99,8 @@ class lin_model():
                 pad_input(input, n)
             # print(len(input),self.input_size)
 
-            outputs = deque()
-            for i, entry in enumerate(input):
-                activation = activation_fn(entry)
-                outputs.append(activation)
+            outputs = activation_fn(input)
+            
             self.activations.append(input) # store activation of input layer in index 0
             self.outputs.append(outputs) # store output of input layer in index 0
             return self.feed_forward(outputs, lyr+1, cleanAfter=cleanAfter) 
@@ -158,7 +156,7 @@ class lin_model():
         for i in range(len(self.layers)-1,-1,-1):
             #if output layer
             if count == len(self.outputs)-1:
-                dels, grads = output_sqred_err_grad_vec(sigmoid_derivative, self.outputs[count],
+                dels, grads = output_sqred_err_grad_vec(sigmoid, self.outputs[count],
                                           actual_y_vect, self.activations[count],self.outputs[count-1])
                 #print('dels, grads:',dels,grads)
                 gradients.appendleft(grads)
@@ -167,7 +165,7 @@ class lin_model():
                 continue
             next_layer: layer = self.get_layer(i+1)
             transposed_weights = np.transpose(next_layer.weights)            
-            dels, grads = sqred_err_grad_vec(sigmoid_derivative, 
+            dels, grads = sqred_err_grad_vec(sigmoid, 
                                              self.activations[count],
                                              transposed_weights,
                                              deltas[0],
@@ -239,22 +237,21 @@ class lin_model():
             weights.append(lyr.weights)
         return weights
 class layer():
-    def __init__(self, activation_fn, activation_fn_d, layer_size):
+    def __init__(self, activation_fn, layer_size):
         self.weights = []
-        self.activation_fn = activation_fn
-        self.activation_fn_d = activation_fn_d 
+        self.activation_fn = activation_fn # must take in a vector and output a vector
         self.total_nodes = layer_size
         self.activations = deque()
 
-    def initWeights(self, size:int, value=0.001):
+    def initWeights(self, size:int, value=0.001, method='xavier'):
         """Initialises weights such that there are <size> weights per node in the layer
         
         Args: 
             size: the number of weights in each node of the layer (excludes bias). (Usually equal to the number of nodes in the previous layer.)
             value: the default value for each weight. 
         """
-
-        self.weights = np.full([self.total_nodes,size],value)
+        prev_n = size-1 # taking into account bias
+        self.weights = xavier_init(prev_n,self.total_nodes)
 
     def computeOutputs(self, input: deque):
         """Computes outputs for every node for the layer using weights. 
@@ -268,7 +265,6 @@ class layer():
 
         Returns: a deque collection of outputs from the current layer.
         """
-        outputs = deque()
         
         
 
@@ -296,7 +292,8 @@ class layer():
             # stores activation into class
             self.activations.append(a)
 
-            outputs.append(self.activation_fn(a))
+        outputs = self.activation_fn(self.activations)
+
         # remove the op term for bias from queue reference
         input.pop()
         return outputs

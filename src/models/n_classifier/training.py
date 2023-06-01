@@ -4,10 +4,11 @@ from classifier import layer, lin_model
 import random
 import sys
 import numpy as np
+from models.initialization.weights_init import xavier_init
 print(sys.path)
 sys.path.insert(0, 'C:\\Users\\proki\\repos\\aipa\\src')
 sys.path.insert(0, 'D:\\proki\\repos\\general\\aipa\\src')
-from optimisers.activation_fn import sigmoid, sigmoid_derivative
+from optimisers.activation_fn import sigmoid, softmax
 from backpropagation.gradient_descent import mini_batch_gradient_descent
 from preprocess.word_embedder import bag_of_words, embed_intents
 
@@ -19,13 +20,13 @@ def train_model(model: lin_model):
     vectorised_y = embed_intents(list(intents.keys()), inputs[:,1])
     preprocessed_inputs = [(vectorised_x[i], vectorised_y[i]) for i in range(len(vectorised_y))]
     print(vectorised_y)
-    model.add_layer(sigmoid, sigmoid_derivative)
-    model.add_layer(sigmoid, sigmoid_derivative)
-    model.add_layer(sigmoid, sigmoid_derivative)
-    model.add_layer(sigmoid, sigmoid_derivative, 3) #output shape: [y1 (reminders intent),y2 (email intent), y3 (other intent)], y1 & y2 b/w 0-1 inclusive
+    model.add_layer(sigmoid)
+    model.add_layer(sigmoid)
+    model.add_layer(sigmoid)
+    model.add_layer(sigmoid, 3) #output shape: [y1 (reminders intent),y2 (email intent), y3 (other intent)], y1 & y2 b/w 0-1 inclusive
   
     # mini_batch_gradient_descent(model, [([10,20,10,20,30], [1,0,0])], [([10,20,10,40,2],[1,0,0])],test_function=test_model,batch_size=1)
-    mini_batch_gradient_descent(model, preprocessed_inputs, [([10,20,10,40,2],[1,0,0])],test_function=test_model,batch_size=5)
+    mini_batch_gradient_descent(model, preprocessed_inputs, [([10,20,10,40,2],[1,0,0])],test_function=test_model,batch_size=1)
 
 # samples shape: list[(input vector: list[float], actualOutput: list[float])], actualOutput is the numerical rep of intents
 def test_model(model: lin_model, samples, prefix:str):
@@ -58,6 +59,5 @@ def get_intents():
     return json.loads(intents_input)
 
 train_model(lin_model(input_size=159,layer_size=120, learning_rate=0.01))
-
 
 

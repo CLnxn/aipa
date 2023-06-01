@@ -2,7 +2,7 @@ import numpy as np
 from optimisers.activation_fn import sigmoid_derivative
 from collections import deque
 
-def output_sqred_err_grad_vec(act_fn_d, 
+def output_sqred_err_grad_vec(act_fn, 
                                   calc_y_vect: list[float], 
                                   act_y_vect: list[float],
                                   activ_lyr_vect:list[float], 
@@ -30,7 +30,7 @@ def output_sqred_err_grad_vec(act_fn_d,
     print(calc_y_vect,act_y_vect,activ_lyr_vect, prev_lyr_op_vect)
     prev_lyr_op_vect = deque(prev_lyr_op_vect)
     prev_lyr_op_vect.append(1)
-    act_d_op = np.asarray([act_fn_d(activation) for activation in activ_lyr_vect])
+    act_d_op = np.asarray(act_fn(activ_lyr_vect, derivative=True))
     gradients = np.zeros((len(activ_lyr_vect), len(prev_lyr_op_vect)))
     d_y = np.subtract(calc_y_vect,act_y_vect)
     deltas = deque()
@@ -47,7 +47,7 @@ def output_sqred_err_grad_vec(act_fn_d,
     
     return deltas, gradients
 
-def sqred_err_grad_vec(act_fn_d, 
+def sqred_err_grad_vec(act_fn, 
                        curr_lyr_activ_vect, 
                        next_lyr_w_matrix:np.ndarray, 
                        next_lyr_deltas, prev_lyr_op_vect):
@@ -89,16 +89,17 @@ def sqred_err_grad_vec(act_fn_d,
     deltas = deque()
     # start populating gradients and deltas using backprog to from next (right) to current layer
     # print('start 0')
-    for i, activation in enumerate(curr_lyr_activ_vect):
+    activ_d = act_fn(curr_lyr_activ_vect, derivative=True)
+
+    for i in range(len(curr_lyr_activ_vect)):
         # print('start 1')
-        activ_d = act_fn_d(activation)
         # sum of next layer weights associated with curr layer node with next layer deltas 
         next_lyr_sum = np.dot(next_lyr_w_matrix[i], next_lyr_deltas)
         # check scalar
         if not type(next_lyr_sum) is np.float64:
             raise Exception('dot product does not produce a scalar value') 
         
-        deltaNode = next_lyr_sum*activ_d
+        deltaNode = next_lyr_sum*activ_d[i]
         deltas.append(deltaNode)
         # print(next_lyr_w_matrix[i], next_lyr_deltas)
         gradients[i] = np.multiply(deltaNode, prev_lyr_op_vect) 
